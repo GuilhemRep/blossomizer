@@ -1,6 +1,6 @@
 all:
-	ocamlc -c main.ml
-	ocamlc -o main main.cmo
+	ocamlc -c blossomizer.ml
+	ocamlc -o blossomizer blossomizer.cmo
 
 clean:
 	rm -rf main *.cmi *.cmo *~

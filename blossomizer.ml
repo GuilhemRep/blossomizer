@@ -96,7 +96,7 @@ let score (word:string) (bonus:char) =
 
 (* The main program*)
 let () =
-  let word_list = read_dict "dict1.txt" in
+  let word_list = read_dict "dict.txt" in
   let letter_list = ref [] in
   for i = 1 to 7 do
     if (String.length (Sys.argv.(i))>1) then
