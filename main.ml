@@ -1,6 +1,7 @@
 exception F
 
-let read_dict (file:string) =
+(** Reads the text file [file] and returns a list of its lines in the form of a string list*)
+let read_dict (file:string) : string list =
   let ic = open_in file in
   let l = ref [] in
   try (
@@ -11,25 +12,28 @@ let read_dict (file:string) =
     done;
     []
   ) with End_of_file -> close_in ic ;
-  List. rev (!l)
+  List.rev (!l)
 
-let rec in_char (c:char) l = match l with
-  []->false
-  |c'::q when c=c'->true
-  |_::q -> in_char c q
-
-let in_center_letter (c:char) w =
+(** Returns [true] whenever [c] is a letter of [w]*)
+let in_center_letter (c:char) (word:string) : bool =
   try(
-    for i=0 to (String.length w -1) do
-      if w.[i]=c then raise F
+    for i=0 to (String.length word -1) do
+      if word.[i]=c then raise F
     done;
     false
   ) with _ -> true
 
-let test_word w letter_list =
+(* Test *)
+let () =
+  assert (in_center_letter 'a' "baobab");
+  assert (in_center_letter 'z' "zen");
+  assert (in_center_letter 'e' "cake")
+
+(** Returns [true] whenever [w] is written with only the letters of [letter_list]*)
+let test_word (word:string) (letter_list:char list) : bool =
   try (
-  for i=0 to (String.length w - 1) do
-    if (not(in_char w.[i] letter_list)) then
+  for i=0 to (String.length word - 1) do
+    if (not(List.mem word.[i] letter_list)) then
       (
         raise F
       )
@@ -39,6 +43,7 @@ let test_word w letter_list =
   true)
 with F -> false
 
+(* Test *)
 let () =
   assert (test_word "bonjour" ['b';'o';'n';'j';'u';'r']);
   assert (test_word "bonjour" ['b';'o';'n';'u';'r'] = false);
@@ -46,35 +51,42 @@ let () =
   assert (test_word "la" ['l';'a']);
   assert (test_word "bon" [] = false)
 
-let rec filter_words word_list letter_list center = match word_list with
+(** Takes a [word_list], a [letter_list] containing all allowed letters and the [center] letter,
+    and returns a list containing all possible words*)
+let rec filter_words (word_list:string list) (letter_list:char list) (center:char) : string list =
+  match word_list with
   []->[]
   |w::q when (String.length w<4) -> filter_words q letter_list center
   |w::q when (not (in_center_letter center w)) -> filter_words q letter_list center
   |w::q -> if (test_word w letter_list) then (w::(filter_words q letter_list center))
           else filter_words q letter_list center
 
+(* Test *)
 let () =
   assert (filter_words ["bonjour";"bon";"bonbon";"hui"] ['b';'o';'n';'z'] 'b' = ["bonbon"])
 
-let rec print_list l = match l with
-  | [] -> print_newline ()
-  | t::q -> print_endline t ; print_list q
-
+(** Insertion in a list, without repetition*)
 let rec insert x l = match l with
 | [] -> [x]
 | t::q when t=x -> l
 | t::q -> t::(insert x q)
 
-let score w bonus =
+(* Test *)
+let () =
+  assert (insert 2 [1;6;8] = [1;6;8;2]);
+  assert (insert 6 [1;6;8] = [1;6;8])
+
+(** Computes the score of a given [word] and the current [bonus] letter*)
+let score (word:string) (bonus:char) =
   let s = ref 0 in
   let l = ref [] in
-  for i=0 to String.length w - 1 do
-    l:= insert (w.[i]) (!l);
-    if (w.[i])=bonus then s := (!s) + 5 + 45 (* Pour la stratégie*)
+  for i=0 to String.length word - 1 do
+    l:= insert (word.[i]) (!l);
+    if (word.[i])=bonus then s := (!s) + 5 + 45 (* Pour la stratégie*)
   done;
   if List.length (!l) = 7 then s := (!s) + 7;
   !s +
-  match String.length w with
+  match String.length word with
   | 4 -> 2
   | 5 -> 4
   | 6 -> 6
@@ -82,6 +94,7 @@ let score w bonus =
   | l -> 12 + 3*(l-7)
 
 
+(* The main program*)
 let () =
   let word_list = read_dict "dict1.txt" in
   let letter_list = ref [] in
