@@ -93,10 +93,29 @@ let score (word:string) (bonus:char) =
       | 7 -> 12
       | l -> 12 + 3*(l-7)
 
+let score (word:string) (bonus:char) =
+  let s = ref 0 in
+  let l = ref [] in
+  for i=0 to String.length word - 1 do
+    l:= insert (word.[i]) (!l);
+    if (word.[i])=bonus then s := (!s) + 5
+  done;
+  if List.length (!l) = 7 then s := (!s) + 7;
+  !s +
+    match String.length word with
+      | 4 -> 2
+      | 5 -> 4
+      | 6 -> 6
+      | 7 -> 12
+      | l -> 12 + 3*(l-7)
+
 
 (* The main program*)
+
+(* The dictionnary*)
+let word_list = read_dict "dict.txt"
+
 let () =
-  let word_list = read_dict "dict.txt" in
   let letter_list = ref [] in
   if Array.length (Sys.argv) <> 8 then
     failwith "Expected 7 arguments";
@@ -106,24 +125,39 @@ let () =
     else
       letter_list := (Sys.argv.(i).[0])::(!letter_list)
   done;
-  let center = Sys.argv.(1).[0] in
-  let filtered_list = ref (filter_words word_list (!letter_list) center) in
-  let counter = ref 0 in
-  while (!counter < 12) do
-    incr counter;
+
+  let center_letter = Sys.argv.(1).[0] in
+  let filtered_list = ref (filter_words word_list (!letter_list) center_letter) in
+  let counter = ref 1 in
+  let game_score = ref 0 in
+
+  while (!counter <= 12) do
     print_endline ("Type bonus letter for flower " ^ Int.to_string (!counter) ^": ");
     let user_input = In_channel.input_line In_channel.stdin in
     match user_input with
     | None -> ()
-    | Some bonus when String.length bonus = 1 ->
+    | Some bonus_letter when String.length bonus_letter = 1 ->
       (
-        filtered_list := List.sort (fun w1 w2 -> score w2 (bonus.[0]) - score w1 (bonus.[0])) (!filtered_list);
+        let bonus = bonus_letter.[0] in
+        let confirmed = ref false in
+        while (not (!confirmed)) do
+        filtered_list := List.sort (fun w1 w2 -> score w2 (bonus) - score w1 (bonus)) (!filtered_list);
         print_endline ("Suggested word: " ^ (String.uppercase_ascii (List.hd (!filtered_list))));
         print_endline "Confirm? (Y/n)";
-        let user_input = In_channel.input_line In_channel.stdin in
-        match user_input with
-          |Some x when (String.length x = 0) || (x.[0]<>'n')  -> filtered_list := List.tl (!filtered_list)
-          |_ -> (decr counter)
-      )
-    | Some bonus -> ()
-  done
+          let user_input = In_channel.input_line In_channel.stdin in
+          match user_input with
+            |Some x when (String.length x = 0) || (x.[0]<>'n') ->
+              (
+                game_score := (!game_score) + score (List.hd (!filtered_list)) (bonus);
+                filtered_list := List.tl (!filtered_list);
+                incr counter;
+                confirmed := true
+              )
+            |_ -> filtered_list := List.tl (!filtered_list)
+        done
+        )
+        | Some bonus -> ()
+        
+    done;
+
+  print_endline ("Score: " ^ (Int.to_string (!game_score)))
