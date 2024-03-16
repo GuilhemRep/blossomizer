@@ -8,6 +8,8 @@
 *.cmxs
 *.cmxa
 *.txt
+blossomizer
+main
 
 # ocamlbuild working directory
 _build/

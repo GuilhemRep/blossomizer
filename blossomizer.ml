@@ -1,4 +1,4 @@
-exception F
+exception Break
 
 (** Reads the text file [file] and returns a list of its lines in the form of a string list*)
 let read_dict (file:string) : string list =
@@ -18,7 +18,7 @@ let read_dict (file:string) : string list =
 let in_center_letter (c:char) (word:string) : bool =
   try(
     for i=0 to (String.length word -1) do
-      if word.[i]=c then raise F
+      if word.[i]=c then raise Break
     done;
     false
   ) with _ -> true
@@ -35,13 +35,13 @@ let test_word (word:string) (letter_list:char list) : bool =
   for i=0 to (String.length word - 1) do
     if (not(List.mem word.[i] letter_list)) then
       (
-        raise F
+        raise Break
       )
     else
       ()
   done;
   true)
-with F -> false
+with Break -> false
 
 (* Test *)
 let () =
@@ -86,34 +86,44 @@ let score (word:string) (bonus:char) =
   done;
   if List.length (!l) = 7 then s := (!s) + 7;
   !s +
-  match String.length word with
-  | 4 -> 2
-  | 5 -> 4
-  | 6 -> 6
-  | 7 -> 12
-  | l -> 12 + 3*(l-7)
+    match String.length word with
+      | 4 -> 2
+      | 5 -> 4
+      | 6 -> 6
+      | 7 -> 12
+      | l -> 12 + 3*(l-7)
 
 
 (* The main program*)
 let () =
   let word_list = read_dict "dict.txt" in
   let letter_list = ref [] in
+  if Array.length (Sys.argv) <> 8 then
+    failwith "Expected 7 arguments";
   for i = 1 to 7 do
     if (String.length (Sys.argv.(i))>1) then
-      raise F
+      failwith "Not letters"
     else
       letter_list := (Sys.argv.(i).[0])::(!letter_list)
   done;
   let center = Sys.argv.(1).[0] in
   let filtered_list = ref (filter_words word_list (!letter_list) center) in
-  while true do
+  let counter = ref 0 in
+  while (!counter < 12) do
+    incr counter;
+    print_endline ("Type bonus letter for flower " ^ Int.to_string (!counter) ^": ");
     let user_input = In_channel.input_line In_channel.stdin in
     match user_input with
     | None -> ()
-    | Some bonus ->
+    | Some bonus when String.length bonus = 1 ->
       (
         filtered_list := List.sort (fun w1 w2 -> score w2 (bonus.[0]) - score w1 (bonus.[0])) (!filtered_list);
-        print_endline (List.hd (!filtered_list));
-        filtered_list := List.tl (!filtered_list)
+        print_endline ("Suggested word: " ^ (String.uppercase_ascii (List.hd (!filtered_list))));
+        print_endline "Confirm? (Y/n)";
+        let user_input = In_channel.input_line In_channel.stdin in
+        match user_input with
+          |Some x when (String.length x = 0) || (x.[0]<>'n')  -> filtered_list := List.tl (!filtered_list)
+          |_ -> (decr counter)
       )
+    | Some bonus -> ()
   done
