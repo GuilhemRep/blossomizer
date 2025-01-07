@@ -13,6 +13,6 @@ Install OCaml :-)
 - Suppose the current letters of the game are *a*,*b*...*g* and that the center letter is *c*. Run **./blossomizer c a b d e f g**. Note that *c* comes first.
 - Then, you can type the current bonus letter, and *blossomizer* will suggest a word to play.
 
-Have fun, and become a mega boss!
+Have fun, become a mega boss, and learn vital words like 'notodontoid' and 'tintinnid'!
 
 ![illustration](boss.png)
